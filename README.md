@@ -14,18 +14,15 @@ JetLAG monitors flight delays, cancellations, and airline disruptions across the
 
 ## 🚀 Why JetLAG?
 
-Flight disruptions cost time, money, and sanity. Most tools tell you *where* a plane is — JetLAG tells you *when things go wrong* and helps you stay ahead of it.
+Flight disruptions cost time, money, and sanity. Most tools tell you *where* a plane is, JetLAG tells you *when things go wrong* and helps you stay ahead of it.
 
 ## 🛠️ Tech Stack
 
-- [Add your stack here — e.g., React, Node.js, PostgreSQL, etc.]
+- Will Disclose Soon 
 
 ## 📦 Getting Started
 
-```bash
-git clone https://github.com/musaddiq2021/JetLAG.git
-cd JetLAG
-# add your install/run instructions
+```In Progress
 ```
 
 ## 🤝 Contributing
@@ -33,5 +30,4 @@ cd JetLAG
 Contributions, ideas, and feedback are welcome. Open an issue or submit a PR.
 
 ## 📄 License
-
-[Your license here]
+In Progress
