@@ -104,6 +104,13 @@ h1, h2, h3 {
     linear-gradient(180deg, #091525 0%, #07111f 48%, #040911 100%);
 }
 
+@media (max-width: 640px) {
+  .glass-panel,
+  .glass-soft {
+    backdrop-filter: blur(10px) saturate(120%);
+  }
+}
+
 .tabular { font-variant-numeric: tabular-nums; }
 
 @keyframes pulseDot {

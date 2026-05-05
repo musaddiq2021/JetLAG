@@ -118,8 +118,8 @@ function FlapTile({ target, delay = 0, tone = 'default', size = 'standard', cycl
 
   const isSpace = target === ' '
   const tileSize = size === 'compact'
-    ? { tile: 'w-[12px] h-[22px]', gap: 'w-[7px] h-[22px]', text: 'text-[11px]' }
-    : { tile: 'w-[15px] h-[26px]', gap: 'w-[8px] h-[26px]', text: 'text-[13px]' }
+    ? { tile: 'w-[10px] h-[19px] sm:w-[12px] sm:h-[22px]', gap: 'w-[5px] h-[19px] sm:w-[7px] sm:h-[22px]', text: 'text-[9px] sm:text-[11px]' }
+    : { tile: 'w-[12px] h-[22px] sm:w-[15px] sm:h-[26px]', gap: 'w-[6px] h-[22px] sm:w-[8px] sm:h-[26px]', text: 'text-[11px] sm:text-[13px]' }
 
   return (
     <span
@@ -153,8 +153,8 @@ function SplitFlapStatus({ text, tone = 'default', baseDelay = 0, size = 'standa
   const inView = useInView(ref, { amount: 0.72, margin: '-8% 0px -8% 0px' })
   const [cycle, setCycle] = useState(0)
   const shell = size === 'compact'
-    ? 'gap-[2px] px-[7px] py-[6px] rounded-[5px]'
-    : 'gap-[2px] px-[7px] py-[6px] rounded-[6px]'
+    ? 'gap-[1px] px-[5px] py-[5px] sm:gap-[2px] sm:px-[7px] sm:py-[6px] rounded-[5px]'
+    : 'gap-[1px] px-[5px] py-[5px] sm:gap-[2px] sm:px-[7px] sm:py-[6px] rounded-[6px]'
 
   useEffect(() => {
     if (inView) setCycle((value) => value + 1)
@@ -186,7 +186,7 @@ function EmiratesMark({ className = '' }) {
   )
 }
 
-function AirSignalLogo() {
+function JetLagsLogo() {
   return (
     <div className="flex items-center gap-2">
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
@@ -194,8 +194,8 @@ function AirSignalLogo() {
         <path d="M3 11 L11 3 L19 11 L11 19 Z" fill="none" stroke="rgba(246,250,255,0.82)" strokeWidth="1.2" />
         <circle cx="11" cy="11" r="2" fill="#6EA8FF" />
       </svg>
-      <span className="font-serif text-[19px] tracking-tight font-semibold text-ink">AirSignal</span>
-      <span className="ml-1 text-[10px] uppercase tracking-[0.18em] text-graphite/70 font-medium pt-[3px]">Intelligence</span>
+      <span className="font-serif text-[19px] tracking-tight font-semibold text-ink">JetLags</span>
+      <span className="ml-1 hidden text-[10px] uppercase tracking-[0.18em] text-graphite/70 font-medium pt-[3px] sm:inline">Aviation Intelligence</span>
     </div>
   )
 }
@@ -210,9 +210,9 @@ function TopNav() {
   ]
   return (
     <header className="sticky top-0 z-30 border-b hairline bg-[#07111F]/82 backdrop-blur-xl">
-      <div className="max-w-[1440px] mx-auto px-8 h-[60px] flex items-center justify-between">
-        <AirSignalLogo />
-        <nav className="flex items-center gap-1">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-[58px] sm:h-[60px] flex items-center justify-between gap-3">
+        <JetLagsLogo />
+        <nav className="hidden md:flex items-center gap-1">
           {items.map(([it, href], i) => (
             <a
               key={it}
@@ -227,16 +227,16 @@ function TopNav() {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-3">
-          <button className="text-[12px] text-graphite hover:text-ink flex items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button className="hidden text-[12px] text-graphite hover:text-ink sm:flex items-center gap-1.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-green pulse-dot" />
             Live
           </button>
-          <div className="h-5 w-px bg-black/10" />
-          <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border hairline glass-soft shadow-soft hover:shadow-panel transition">
+          <div className="hidden h-5 w-px bg-white/10 sm:block" />
+          <button className="flex items-center gap-2 px-2 py-1.5 sm:px-2.5 rounded-md border hairline glass-soft shadow-soft hover:shadow-panel transition">
             <EmiratesMark className="w-5 h-2" />
             <span className="text-[12.5px] font-medium text-ink">Emirates</span>
-            <span className="text-[10px] text-graphite/70 font-mono">EK / UAE</span>
+            <span className="hidden text-[10px] text-graphite/70 font-mono sm:inline">EK / UAE</span>
             <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 4 L5 7 L8 4" fill="none" stroke="rgba(246,250,255,0.82)" strokeWidth="1.2" /></svg>
           </button>
         </div>
@@ -254,7 +254,7 @@ function RiskLineChart() {
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ')
   const area = `${path} L 600 90 L 0 90 Z`
   return (
-    <svg viewBox="0 0 600 120" className="w-full h-[142px]" preserveAspectRatio="none">
+    <svg viewBox="0 0 600 120" className="w-full h-[110px] sm:h-[142px]" preserveAspectRatio="none">
       <defs>
         <linearGradient id="riskGrad" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#FF5F57" stopOpacity="0.34" />
@@ -311,11 +311,11 @@ function RiskEnginePanel() {
   ]
 
   return (
-    <div className="rounded-xl border hairline glass-panel px-4 py-4 shadow-panel">
+    <div className="rounded-xl border hairline glass-panel px-3 py-3 shadow-panel sm:px-4 sm:py-4">
       <div className="flex items-start justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-graphite/60 font-semibold">Risk Engine</div>
-          <div className="mt-1 font-serif text-[42px] leading-none tracking-[-0.04em] text-ink font-semibold tabular">74<span className="text-[18px] text-graphite/40">/100</span></div>
+          <div className="mt-1 font-serif text-[34px] leading-none tracking-[-0.04em] text-ink font-semibold tabular sm:text-[42px]">74<span className="text-[16px] text-graphite/40 sm:text-[18px]">/100</span></div>
         </div>
         <div className="rounded-lg border border-signal-red/30 bg-signal-red/[0.10] px-3 py-2 text-right shadow-soft">
           <div className="text-[9px] uppercase tracking-[0.18em] text-signal-red font-semibold">Escalating</div>
@@ -323,7 +323,7 @@ function RiskEnginePanel() {
         </div>
       </div>
 
-      <div className="mt-5 rounded-lg border hairline bg-[#06101D]/72 px-3 pt-3 pb-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className="mt-4 rounded-lg border hairline bg-[#06101D]/72 px-2 pt-2 pb-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:mt-5 sm:px-3 sm:pt-3 sm:pb-2">
         <RiskLineChart />
       </div>
 
@@ -373,20 +373,20 @@ function CommandStrip() {
   ]
 
   return (
-    <section className="mb-5 grid grid-cols-4 gap-3 rounded-2xl border hairline glass-panel p-2 shadow-panel">
+    <section className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border hairline glass-panel p-2 shadow-panel sm:mb-5 lg:grid-cols-4 lg:gap-3">
       {items.map(([label, value, meta], i) => (
         <motion.div
           key={label}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: i * 0.04 }}
-          className="border hairline bg-white/[0.045] px-4 py-3 shadow-soft rounded-xl"
+          className="border hairline bg-white/[0.045] px-3 py-3 shadow-soft rounded-xl sm:px-4"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9.5px] uppercase tracking-[0.18em] text-graphite/60 font-semibold">{label}</span>
+            <span className="text-[8.5px] uppercase tracking-[0.14em] text-graphite/60 font-semibold sm:text-[9.5px] sm:tracking-[0.18em]">{label}</span>
             <span className="font-mono text-[10px] text-graphite/50">{meta}</span>
           </div>
-          <div className={`mt-1 font-serif text-[22px] leading-none tracking-[-0.03em] font-semibold ${i === 1 ? 'text-signal-red' : 'text-ink'}`}>{value}</div>
+          <div className={`mt-1 font-serif text-[18px] leading-none tracking-[-0.03em] font-semibold sm:text-[22px] ${i === 1 ? 'text-signal-red' : 'text-ink'}`}>{value}</div>
         </motion.div>
       ))}
     </section>
@@ -430,9 +430,9 @@ function HeroPanel() {
         </g>
       </svg>
 
-      <div className="relative px-8 pt-7 pb-7">
-        <div className="flex items-center justify-between gap-6 mb-5">
-          <div className="flex items-center gap-2.5">
+      <div className="relative px-4 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6 lg:px-8 lg:pt-7 lg:pb-7">
+        <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="flex flex-wrap items-center gap-2.5">
             <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/[0.055] border hairline">
               <EmiratesMark className="w-4 h-1.5" />
               <span className="text-[10.5px] uppercase tracking-[0.16em] text-graphite font-semibold">Emirates / Carrier Watch</span>
@@ -445,9 +445,9 @@ function HeroPanel() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-7">
-            <div className="mb-5 inline-flex rounded-xl border border-black/10 bg-[#11151B] p-3 shadow-[0_12px_30px_-22px_rgba(14,17,22,0.7)]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">
+          <div className="lg:col-span-7">
+            <div className="mb-5 max-w-full overflow-hidden inline-flex rounded-xl border border-black/10 bg-[#11151B] p-2.5 sm:p-3 shadow-[0_12px_30px_-22px_rgba(14,17,22,0.7)]">
               <div className="flex flex-col gap-1">
                 <SplitFlapStatus text="DXB OPERATIONS" tone="default" size="compact" />
                 <SplitFlapStatus text="DISRUPTION RISK HIGH" tone="red" baseDelay={280} size="compact" />
@@ -461,13 +461,13 @@ function HeroPanel() {
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-red pulse-dot" />
               <span className="text-[10.5px] uppercase tracking-[0.18em] text-signal-red font-semibold">Disruption Signal / Active</span>
             </div>
-            <h1 className="font-serif text-[48px] leading-[0.98] tracking-[-0.035em] text-ink font-semibold">
+            <h1 className="font-serif text-[36px] leading-[0.98] tracking-[-0.035em] text-ink font-semibold sm:text-[44px] lg:text-[48px]">
               Potential disruption<br />detected.
             </h1>
             <p className="mt-4 text-[15px] leading-[1.5] text-graphite max-w-[560px]">
               Abnormal delay patterns detected across multiple Middle East routes. Airspace constraints and regional factors are increasing disruption risk over the next operational window.
             </p>
-            <div className="mt-6 flex items-center gap-6">
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-6">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] text-graphite/70 font-medium mb-1.5">Risk Level</div>
                 <div className="flex items-baseline gap-2">
@@ -475,15 +475,15 @@ function HeroPanel() {
                   <span className="text-[11px] font-mono text-graphite">+22 pts / 4h</span>
                 </div>
               </div>
-              <div className="h-12 w-px bg-black/10" />
+              <div className="hidden h-12 w-px bg-white/10 sm:block" />
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] text-graphite/70 font-medium mb-1.5">Confidence</div>
                 <div className="flex items-baseline gap-2">
                   <span className="font-serif text-[30px] font-semibold text-ink leading-none tabular">87<span className="text-graphite/50 text-[18px]">%</span></span>
                 </div>
               </div>
-              <div className="h-12 w-px bg-black/10" />
-              <div>
+              <div className="hidden h-12 w-px bg-white/10 sm:block" />
+              <div className="col-span-2 sm:col-span-1">
                 <div className="text-[10px] uppercase tracking-[0.16em] text-graphite/70 font-medium mb-1.5">Auto-updated</div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-green pulse-dot" />
@@ -493,7 +493,7 @@ function HeroPanel() {
             </div>
           </div>
 
-          <div className="col-span-5">
+          <div className="lg:col-span-5">
             <div className="flex items-center justify-between mb-3">
               <div className="text-[10.5px] uppercase tracking-[0.18em] text-graphite font-semibold">Disruption Risk / Engine</div>
               <div className="flex items-center gap-3 text-[10px] font-mono text-graphite/70">
@@ -574,12 +574,12 @@ function RiskBar({ level }) {
 function FlightsTable() {
   return (
     <section id="flights" className="rounded-2xl border hairline glass-panel shadow-panel overflow-hidden scroll-mt-24">
-      <div className="flex items-center justify-between px-6 py-3.5 border-b hairline">
+      <div className="flex flex-col gap-3 px-4 py-3.5 border-b hairline sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-3">
           <span className="text-[10.5px] uppercase tracking-[0.18em] text-graphite font-semibold">Live Flights / Emirates</span>
-          <span className="text-[11px] font-mono text-graphite/60">DXB outbound / 5 of 312</span>
+          <span className="hidden text-[11px] font-mono text-graphite/60 sm:inline">DXB outbound / 5 of 312</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4 sm:justify-start">
           <div className="flex items-center gap-1.5 text-[11px] text-graphite">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-green pulse-dot" />
             <span className="font-mono">streaming</span>
@@ -592,7 +592,7 @@ function FlightsTable() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4 px-6 py-2.5 text-[10px] uppercase tracking-[0.16em] text-graphite/60 font-medium border-b hairline">
+      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-2.5 text-[10px] uppercase tracking-[0.16em] text-graphite/60 font-medium border-b hairline">
         <div className="col-span-2">Flight</div>
         <div className="col-span-4">Route</div>
         <div className="col-span-3">Status</div>
@@ -600,7 +600,41 @@ function FlightsTable() {
         <div className="col-span-2 text-right">Risk</div>
       </div>
 
-      <div>
+      <div className="md:hidden divide-y divide-white/10">
+        {FLIGHTS.map((f, i) => (
+          <motion.div
+            key={`mobile-${f.code}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 * i }}
+            className="px-4 py-4"
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[14px] font-semibold text-ink tabular">{f.code}</span>
+                  <span className="text-[9px] uppercase tracking-[0.14em] text-graphite/60 px-1.5 py-0.5 rounded bg-white/[0.055]">A380</span>
+                </div>
+                <div className="mt-1 flex items-center gap-2 text-[12px] text-graphite">
+                  <span className="font-mono text-ink">{f.from}</span>
+                  <span className="text-graphite/50">→</span>
+                  <span className="font-mono text-ink">{f.to}</span>
+                  <span className="truncate">{f.city}</span>
+                </div>
+              </div>
+              <RiskBar level={f.risk} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <SplitFlapStatus text={f.status} tone={f.tone} baseDelay={120 + i * 90} />
+              <div className={`font-mono tabular text-[13px] ${f.tone === 'red' ? 'text-signal-red' : f.tone === 'amber' ? 'text-signal-amber' : 'text-graphite/50'}`}>
+                {f.delay}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="hidden md:block">
         {FLIGHTS.map((f, i) => (
           <motion.div
             key={f.code}
@@ -620,7 +654,7 @@ function FlightsTable() {
                 <path d="M40 1 L46 5 L40 9" stroke="currentColor" fill="none" strokeWidth="1.2" strokeLinejoin="round" />
               </svg>
               <span className="font-mono text-[13px] text-ink tabular">{f.to}</span>
-              <span className="text-[11.5px] text-graphite/70">{f.city}</span>
+            <span className="hidden text-[11.5px] text-graphite/70 lg:inline">{f.city}</span>
             </div>
             <div className="col-span-3">
               <SplitFlapStatus text={f.status} tone={f.tone} baseDelay={120 + i * 90} />
@@ -830,12 +864,12 @@ function NewsSignalsModule() {
 function OperationsIntelligence() {
   return (
     <div id="intelligence" className="space-y-4 scroll-mt-24">
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between gap-3 px-1">
         <div>
           <div className="text-[10.5px] uppercase tracking-[0.18em] text-graphite font-semibold">Operations Intelligence</div>
           <div className="text-[11px] text-graphite/60 font-mono">4 active signals / auto-correlated</div>
         </div>
-        <button className="text-[11px] text-signal-blue hover:underline">View console -&gt;</button>
+        <button className="shrink-0 text-[11px] text-signal-blue hover:underline">View console -&gt;</button>
       </div>
       <div className="grid grid-cols-1 gap-3">
         <DelaySpikeModule />
@@ -856,19 +890,19 @@ function RegionalSituation() {
   ]
   return (
     <section id="regional" className="rounded-2xl border hairline glass-panel shadow-panel overflow-hidden scroll-mt-24">
-      <div className="flex items-center justify-between px-7 py-4 border-b hairline">
+      <div className="flex flex-col gap-3 px-4 py-4 border-b hairline sm:flex-row sm:items-center sm:justify-between sm:px-7">
         <div className="flex items-center gap-3">
           <span className="text-[10.5px] uppercase tracking-[0.18em] text-graphite font-semibold">Regional Situation</span>
           <span className="text-[11px] font-mono text-graphite/60">Middle East / Eastern Med.</span>
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-graphite/70">
+        <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-graphite/70">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-signal-red/30 border border-signal-red/60" /> High risk</span>
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-signal-amber/25 border border-signal-amber/60" /> Watch</span>
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-paper border hairline" /> Nominal</span>
         </div>
       </div>
       <div className="relative px-5 py-5">
-        <svg viewBox="0 0 460 240" className="w-full h-[220px]">
+        <svg viewBox="0 0 460 240" className="w-full h-[180px] sm:h-[220px]">
           <defs>
             <pattern id="risk-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
               <line x1="0" y1="0" x2="0" y2="5" stroke="#C8362B" strokeWidth="1" opacity="0.35" />
@@ -939,21 +973,21 @@ function AirSignalDashboard() {
     <div className="app-shell text-ink relative">
       <SmoothScrollProvider />
       <TopNav />
-      <main className="max-w-[1440px] mx-auto px-8 py-8">
+      <main className="max-w-[1440px] mx-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CommandStrip />
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-12 xl:col-span-8 space-y-6">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:gap-6">
+          <div className="space-y-5 xl:col-span-8 xl:space-y-6">
             <HeroPanel />
             <FlightsTable />
           </div>
-          <div className="col-span-12 xl:col-span-4 space-y-6">
+          <div className="space-y-5 xl:col-span-4 xl:space-y-6">
             <OperationsIntelligence />
             <RegionalSituation />
           </div>
         </div>
-        <footer className="mt-10 pt-6 border-t hairline flex items-center justify-between text-[11px] text-graphite/60 font-mono">
-          <div id="reports" className="scroll-mt-24">AirSignal / Aviation Intelligence Prototype</div>
-          <div className="flex items-center gap-4">
+        <footer className="mt-8 flex flex-col gap-3 border-t hairline pt-5 text-[11px] text-graphite/60 font-mono sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:pt-6">
+          <div id="reports" className="scroll-mt-24">JetLags / Aviation Intelligence Prototype</div>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <span>v0.4.2</span>
             <span>/</span>
             <span>Data: simulated</span>
