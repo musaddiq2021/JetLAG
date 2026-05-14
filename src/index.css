@@ -50,6 +50,7 @@ body {
   font-feature-settings: "kern", "liga", "tnum";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  caret-color: transparent;
 }
 
 .font-sans {
@@ -102,6 +103,17 @@ h1, h2, h3 {
     radial-gradient(circle at 18% -10%, rgba(60, 120, 255, 0.28), transparent 34rem),
     radial-gradient(circle at 88% 12%, rgba(255, 95, 87, 0.12), transparent 30rem),
     linear-gradient(180deg, #091525 0%, #07111f 48%, #040911 100%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  caret-color: auto;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 @media (max-width: 640px) {
