@@ -3,6 +3,123 @@ import { motion, useInView } from 'framer-motion'
 import Lenis from 'lenis'
 
 const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-+'
+const DASHBOARD_ENDPOINT = 'http://127.0.0.1:8000/api/dashboard/overview'
+
+const FALLBACK_COMMAND_STRIP = [
+  ['Carrier', 'Emirates', 'EK'],
+  ['Hub pressure', 'Elevated', '78/100'],
+  ['Watch routes', '22 affected', '+6 today'],
+  ['Signal confidence', '87%', 'rising'],
+]
+
+const FALLBACK_HERO = {
+  headline: 'Potential disruption detected.',
+  body: 'Abnormal delay patterns detected across multiple Middle East routes. Airspace constraints and regional factors are increasing disruption risk over the next operational window.',
+  risk_level: 'HIGH',
+  risk_change: '+22 pts / 4h',
+  confidence: '87',
+  active_alerts: '7',
+  routes_affected: '22',
+  watch_window: '4h',
+}
+
+const FALLBACK_RISK_ENGINE = {
+  score: 74,
+  status: 'Escalating',
+  change: '+22 pts / 4h',
+  bands: [
+    ['Delay spike', 86, 'red'],
+    ['Airspace constraint', 72, 'amber'],
+    ['DXB congestion', 78, 'red'],
+    ['News signal', 54, 'amber'],
+  ],
+  metrics: [
+    ['Window', '4h'],
+    ['Affected', '22'],
+    ['Confidence', '87%'],
+  ],
+}
+
+const FALLBACK_REGIONAL_STATS = [
+  { l: 'Active zones', v: '2', t: 'red' },
+  { l: 'Watch zones', v: '1', t: 'amber' },
+  { l: 'Hub status', v: 'Strained', t: 'red' },
+  { l: 'Reroutes', v: '14', t: 'default' },
+]
+
+function formatPercent(value) {
+  if (value === null || value === undefined || value === '') return '87'
+  const text = String(value)
+  return text.endsWith('%') ? text.slice(0, -1) : text
+}
+
+function riskTone(status = '') {
+  const value = String(status).toUpperCase()
+  if (value.includes('DELAY') || value === 'HIGH' || value === 'ACTIVE') return 'red'
+  if (value.includes('MONITOR') || value === 'MEDIUM' || value === 'MODERATE') return 'amber'
+  if (value.includes('TIME') || value === 'LOW') return 'green'
+  return 'default'
+}
+
+function normalizeCommandStrip(items) {
+  if (!Array.isArray(items) || items.length === 0) return FALLBACK_COMMAND_STRIP
+  return items.map((item) => {
+    if (Array.isArray(item)) return [item[0], item[1], item[2]]
+    return [
+      item.label ?? item.title ?? item.name ?? '',
+      item.value ?? item.text ?? item.metric ?? '',
+      item.meta ?? item.detail ?? item.caption ?? '',
+    ]
+  })
+}
+
+function normalizeBands(bands) {
+  if (!Array.isArray(bands) || bands.length === 0) return FALLBACK_RISK_ENGINE.bands
+  return bands.map((band) => {
+    if (Array.isArray(band)) return [band[0], Number(band[1] ?? 0), band[2] ?? riskTone(band[0])]
+    const label = band.label ?? band.name ?? band.title ?? ''
+    const value = Number(band.value ?? band.score ?? band.percent ?? 0)
+    return [label, value, band.tone ?? band.severity ?? riskTone(label)]
+  })
+}
+
+function normalizeFlight(flight) {
+  const routeText = flight.route ?? ''
+  const [routeFrom, routeTo] = typeof routeText === 'string' && routeText.includes('→')
+    ? routeText.split('→').map((part) => part.trim())
+    : []
+  const status = flight.status ?? 'MONITORING'
+  return {
+    code: flight.code ?? flight.flight ?? flight.flight_number ?? '',
+    from: flight.from ?? flight.origin ?? routeFrom ?? '',
+    to: flight.to ?? flight.destination ?? routeTo ?? '',
+    city: flight.city ?? flight.destination_city ?? '',
+    status,
+    tone: flight.tone ?? riskTone(status),
+    delay: flight.delay ?? '--',
+    risk: flight.risk ?? flight.risk_level ?? 'LOW',
+  }
+}
+
+function normalizeRegionalStats(regional) {
+  const stats = regional?.stats ?? regional?.metrics
+  if (Array.isArray(stats) && stats.length > 0) {
+    return stats.map((item) => ({
+      l: item.l ?? item.label ?? item.title ?? item.name ?? '',
+      v: item.v ?? item.value ?? item.metric ?? '',
+      t: item.t ?? item.tone ?? item.severity ?? 'default',
+    }))
+  }
+  if (regional && typeof regional === 'object') {
+    return [
+      { l: 'Active zones', v: regional.active_zones ?? FALLBACK_REGIONAL_STATS[0].v, t: 'red' },
+      { l: 'Watch zones', v: regional.watch_zones ?? FALLBACK_REGIONAL_STATS[1].v, t: 'amber' },
+      { l: 'Hub status', v: regional.hub_status ?? FALLBACK_REGIONAL_STATS[2].v, t: 'red' },
+      { l: 'Reroutes', v: regional.reroutes ?? FALLBACK_REGIONAL_STATS[3].v, t: 'default' },
+    ]
+  }
+  return FALLBACK_REGIONAL_STATS
+}
 
 function SmoothScrollProvider() {
   useEffect(() => {
@@ -302,24 +419,32 @@ function RiskLineChart() {
   )
 }
 
-function RiskEnginePanel() {
-  const bands = [
-    ['Delay spike', 86, 'red'],
-    ['Airspace constraint', 72, 'amber'],
-    ['DXB congestion', 78, 'red'],
-    ['News signal', 54, 'amber'],
-  ]
+function RiskEnginePanel({ riskEngine }) {
+  const data = riskEngine || FALLBACK_RISK_ENGINE
+  const score = data.score ?? FALLBACK_RISK_ENGINE.score
+  const status = data.status ?? FALLBACK_RISK_ENGINE.status
+  const change = data.change ?? data.risk_change ?? FALLBACK_RISK_ENGINE.change
+  const bands = normalizeBands(data.bands)
+  const metrics = Array.isArray(data.metrics) && data.metrics.length > 0
+    ? data.metrics.map((item) => Array.isArray(item)
+      ? [item[0], item[1]]
+      : [item.label ?? item.title ?? item.name ?? '', item.value ?? item.metric ?? ''])
+    : [
+      ['Window', data.window ?? data.watch_window ?? FALLBACK_HERO.watch_window],
+      ['Affected', data.affected ?? data.routes_affected ?? FALLBACK_HERO.routes_affected],
+      ['Confidence', data.confidence ?? `${FALLBACK_HERO.confidence}%`],
+    ]
 
   return (
     <div className="rounded-xl border hairline glass-panel px-3 py-3 shadow-panel sm:px-4 sm:py-4">
       <div className="flex items-start justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-graphite/60 font-semibold">Risk Engine</div>
-          <div className="mt-1 font-serif text-[34px] leading-none tracking-[-0.04em] text-ink font-semibold tabular sm:text-[42px]">74<span className="text-[16px] text-graphite/40 sm:text-[18px]">/100</span></div>
+          <div className="mt-1 font-serif text-[34px] leading-none tracking-[-0.04em] text-ink font-semibold tabular sm:text-[42px]">{score}<span className="text-[16px] text-graphite/40 sm:text-[18px]">/100</span></div>
         </div>
         <div className="rounded-lg border border-signal-red/30 bg-signal-red/[0.10] px-3 py-2 text-right shadow-soft">
-          <div className="text-[9px] uppercase tracking-[0.18em] text-signal-red font-semibold">Escalating</div>
-          <div className="font-mono text-[12px] text-ink tabular">+22 pts / 4h</div>
+          <div className="text-[9px] uppercase tracking-[0.18em] text-signal-red font-semibold">{status}</div>
+          <div className="font-mono text-[12px] text-ink tabular">{change}</div>
         </div>
       </div>
 
@@ -349,11 +474,7 @@ function RiskEnginePanel() {
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        {[
-          ['Window', '4h'],
-          ['Affected', '22'],
-          ['Confidence', '87%'],
-        ].map(([label, value]) => (
+        {metrics.map(([label, value]) => (
           <div key={label} className="rounded-lg border hairline bg-white/[0.045] px-3 py-2">
             <div className="text-[9px] uppercase tracking-[0.14em] text-graphite/55">{label}</div>
             <div className="font-mono text-[13px] text-ink tabular">{value}</div>
@@ -364,17 +485,12 @@ function RiskEnginePanel() {
   )
 }
 
-function CommandStrip() {
-  const items = [
-    ['Carrier', 'Emirates', 'EK'],
-    ['Hub pressure', 'Elevated', '78/100'],
-    ['Watch routes', '22 affected', '+6 today'],
-    ['Signal confidence', '87%', 'rising'],
-  ]
+function CommandStrip({ items }) {
+  const commandItems = normalizeCommandStrip(items)
 
   return (
     <section className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border hairline glass-panel p-2 shadow-panel sm:mb-5 lg:grid-cols-4 lg:gap-3">
-      {items.map(([label, value, meta], i) => (
+      {commandItems.map(([label, value, meta], i) => (
         <motion.div
           key={label}
           initial={{ opacity: 0, y: 8 }}
@@ -393,7 +509,21 @@ function CommandStrip() {
   )
 }
 
-function HeroPanel() {
+function HeroPanel({ hero, carrier, riskEngine }) {
+  const heroData = hero || FALLBACK_HERO
+  const carrierName = carrier?.name ?? carrier?.label ?? carrier ?? 'Emirates'
+  const carrierCode = carrier?.code ?? carrier?.iata ?? 'UAE'
+  const headline = heroData.headline ?? heroData.title ?? FALLBACK_HERO.headline
+  const body = heroData.body ?? heroData.summary ?? heroData.supporting_text ?? heroData.description ?? FALLBACK_HERO.body
+  const riskLevel = heroData.risk_level ?? heroData.risk ?? FALLBACK_HERO.risk_level
+  const riskChange = heroData.risk_change ?? heroData.change ?? FALLBACK_HERO.risk_change
+  const confidence = formatPercent(heroData.confidence ?? FALLBACK_HERO.confidence)
+  const activeAlerts = heroData.active_alerts ?? heroData.alerts ?? FALLBACK_HERO.active_alerts
+  const routesAffected = heroData.routes_affected ?? heroData.affected_routes ?? FALLBACK_HERO.routes_affected
+  const watchWindow = heroData.watch_window ?? heroData.window ?? FALLBACK_HERO.watch_window
+  const headlineContent = String(headline).toLowerCase().includes('potential disruption detected')
+    ? <>Potential disruption<br />detected.</>
+    : headline
   const [updated, setUpdated] = useState(new Date())
   useEffect(() => {
     const t = setInterval(() => setUpdated(new Date()), 60000)
@@ -435,9 +565,9 @@ function HeroPanel() {
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/[0.055] border hairline">
               <EmiratesMark className="w-4 h-1.5" />
-              <span className="text-[10.5px] uppercase tracking-[0.16em] text-graphite font-semibold">Emirates / Carrier Watch</span>
+              <span className="text-[10.5px] uppercase tracking-[0.16em] text-graphite font-semibold">{carrierName} / Carrier Watch</span>
             </span>
-            <span className="text-[11px] text-graphite/70 font-mono">UAE / DXB hub</span>
+            <span className="text-[11px] text-graphite/70 font-mono">{carrierCode} / DXB hub</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-graphite/70">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-green pulse-dot" />
@@ -450,7 +580,7 @@ function HeroPanel() {
             <div className="mb-5 max-w-full overflow-hidden inline-flex rounded-xl border border-black/10 bg-[#11151B] p-2.5 sm:p-3 shadow-[0_12px_30px_-22px_rgba(14,17,22,0.7)]">
               <div className="flex flex-col gap-1">
                 <SplitFlapStatus text="DXB OPERATIONS" tone="default" size="compact" />
-                <SplitFlapStatus text="DISRUPTION RISK HIGH" tone="red" baseDelay={280} size="compact" />
+                <SplitFlapStatus text={`DISRUPTION RISK ${String(riskLevel).toUpperCase()}`} tone="red" baseDelay={280} size="compact" />
                 <div className="flex items-center justify-between gap-2 px-1 pt-0.5">
                   <span className="text-[8.5px] uppercase tracking-[0.18em] text-white/40 font-mono">Updated</span>
                   <span className="text-[9px] uppercase tracking-[0.12em] text-white/60 font-mono tabular">{localTime} local</span>
@@ -462,24 +592,24 @@ function HeroPanel() {
               <span className="text-[10.5px] uppercase tracking-[0.18em] text-signal-red font-semibold">Disruption Signal / Active</span>
             </div>
             <h1 className="font-serif text-[36px] leading-[0.98] tracking-[-0.035em] text-ink font-semibold sm:text-[44px] lg:text-[48px]">
-              Potential disruption<br />detected.
+              {headlineContent}
             </h1>
             <p className="mt-4 text-[15px] leading-[1.5] text-graphite max-w-[560px]">
-              Abnormal delay patterns detected across multiple Middle East routes. Airspace constraints and regional factors are increasing disruption risk over the next operational window.
+              {body}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-6">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] text-graphite/70 font-medium mb-1.5">Risk Level</div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-[30px] font-semibold text-signal-red leading-none">HIGH</span>
-                  <span className="text-[11px] font-mono text-graphite">+22 pts / 4h</span>
+                  <span className="font-serif text-[30px] font-semibold text-signal-red leading-none">{riskLevel}</span>
+                  <span className="text-[11px] font-mono text-graphite">{riskChange}</span>
                 </div>
               </div>
               <div className="hidden h-12 w-px bg-white/10 sm:block" />
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] text-graphite/70 font-medium mb-1.5">Confidence</div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-[30px] font-semibold text-ink leading-none tabular">87<span className="text-graphite/50 text-[18px]">%</span></span>
+                  <span className="font-serif text-[30px] font-semibold text-ink leading-none tabular">{confidence}<span className="text-graphite/50 text-[18px]">%</span></span>
                 </div>
               </div>
               <div className="hidden h-12 w-px bg-white/10 sm:block" />
@@ -501,12 +631,12 @@ function HeroPanel() {
                 <span>0-100</span>
               </div>
             </div>
-            <RiskEnginePanel />
+            <RiskEnginePanel riskEngine={riskEngine} />
             <div className="mt-3 grid grid-cols-3 gap-2">
               {[
-                { k: 'Active alerts', v: '7' },
-                { k: 'Routes affected', v: '22' },
-                { k: 'Watch window', v: '4h' },
+                { k: 'Active alerts', v: activeAlerts },
+                { k: 'Routes affected', v: routesAffected },
+                { k: 'Watch window', v: watchWindow },
               ].map((s) => (
                 <div key={s.k} className="rounded-lg border hairline bg-white/[0.045] px-3 py-2">
                   <div className="text-[9.5px] uppercase tracking-[0.14em] text-graphite/70">{s.k}</div>
@@ -571,7 +701,8 @@ function RiskBar({ level }) {
   )
 }
 
-function FlightsTable() {
+function FlightsTable({ flights = FLIGHTS }) {
+  const visibleFlights = Array.isArray(flights) && flights.length > 0 ? flights : FLIGHTS
   return (
     <section id="flights" className="rounded-2xl border hairline glass-panel shadow-panel overflow-hidden scroll-mt-24">
       <div className="flex flex-col gap-3 px-4 py-3.5 border-b hairline sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -601,9 +732,9 @@ function FlightsTable() {
       </div>
 
       <div className="md:hidden divide-y divide-white/10">
-        {FLIGHTS.map((f, i) => (
+        {visibleFlights.map((f, i) => (
           <motion.div
-            key={`mobile-${f.code}`}
+            key={`mobile-${f.code || f.flight || i}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 * i }}
@@ -612,7 +743,7 @@ function FlightsTable() {
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[14px] font-semibold text-ink tabular">{f.code}</span>
+                  <span className="font-mono text-[14px] font-semibold text-ink tabular">{f.code || f.flight}</span>
                   <span className="text-[9px] uppercase tracking-[0.14em] text-graphite/60 px-1.5 py-0.5 rounded bg-white/[0.055]">A380</span>
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-[12px] text-graphite">
@@ -635,16 +766,16 @@ function FlightsTable() {
       </div>
 
       <div className="hidden md:block">
-        {FLIGHTS.map((f, i) => (
+        {visibleFlights.map((f, i) => (
           <motion.div
-            key={f.code}
+            key={f.code || f.flight || i}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 * i }}
             className="grid grid-cols-12 gap-4 px-6 py-3.5 items-center border-b hairline last:border-b-0 hover:bg-paper/40 transition-colors group"
           >
             <div className="col-span-2 flex items-center gap-2">
-              <span className="font-mono text-[13.5px] font-semibold text-ink tabular">{f.code}</span>
+              <span className="font-mono text-[13.5px] font-semibold text-ink tabular">{f.code || f.flight}</span>
               <span className="text-[9.5px] uppercase tracking-[0.14em] text-graphite/60 px-1.5 py-0.5 rounded bg-black/[0.035]">A380</span>
             </div>
             <div className="col-span-4 flex items-center gap-3">
@@ -881,13 +1012,14 @@ function OperationsIntelligence() {
   )
 }
 
-function RegionalSituation() {
+function RegionalSituation({ regional }) {
   const cities = [
     { name: 'Istanbul', x: 120, y: 60, code: 'IST', risk: 'med' },
     { name: 'Tehran', x: 270, y: 95, code: 'IKA', risk: 'high' },
     { name: 'Cairo', x: 110, y: 165, code: 'CAI', risk: 'med' },
     { name: 'Dubai', x: 305, y: 175, code: 'DXB', risk: 'high', hub: true },
   ]
+  const stats = normalizeRegionalStats(regional)
   return (
     <section id="regional" className="rounded-2xl border hairline glass-panel shadow-panel overflow-hidden scroll-mt-24">
       <div className="flex flex-col gap-3 px-4 py-4 border-b hairline sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -951,12 +1083,7 @@ function RegionalSituation() {
         </svg>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
-          {[
-            { l: 'Active zones', v: '2', t: 'red' },
-            { l: 'Watch zones', v: '1', t: 'amber' },
-            { l: 'Hub status', v: 'Strained', t: 'red' },
-            { l: 'Reroutes', v: '14', t: 'default' },
-          ].map((s) => (
+          {stats.map((s) => (
             <div key={s.l} className="rounded-lg border hairline px-3 py-2">
               <div className="text-[9.5px] uppercase tracking-[0.14em] text-graphite/70">{s.l}</div>
               <div className={`font-serif text-[18px] tabular ${s.t === 'red' ? 'text-signal-red' : s.t === 'amber' ? 'text-signal-amber' : 'text-ink'}`}>{s.v}</div>
@@ -969,20 +1096,59 @@ function RegionalSituation() {
 }
 
 function AirSignalDashboard() {
+  const [dashboardData, setDashboardData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadDashboardData() {
+      try {
+        setLoading(true)
+        const response = await fetch(DASHBOARD_ENDPOINT)
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const data = await response.json()
+        console.log("Dashboard data from backend:", data)
+        if (!active) return
+        setDashboardData(data)
+        setError(null)
+      } catch (err) {
+        if (!active) return
+        console.error('Dashboard fetch error:', err)
+        setDashboardData(null)
+        setError(err.message)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    loadDashboardData()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   return (
     <div className="app-shell text-ink relative">
       <SmoothScrollProvider />
       <TopNav />
       <main className="max-w-[1440px] mx-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-        <CommandStrip />
+        {loading && (
+          <div className="mb-4 rounded-xl border hairline glass-soft px-4 py-3 text-[11px] font-mono text-graphite">
+            Loading intelligence feed...
+          </div>
+        )}
+        <CommandStrip items={dashboardData?.command_strip} />
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:gap-6">
           <div className="space-y-5 xl:col-span-8 xl:space-y-6">
-            <HeroPanel />
-            <FlightsTable />
+            <HeroPanel hero={dashboardData?.hero} carrier={dashboardData?.carrier} riskEngine={dashboardData?.risk_engine} />
+            <FlightsTable flights={dashboardData?.flights || FLIGHTS} />
           </div>
           <div className="space-y-5 xl:col-span-4 xl:space-y-6">
             <OperationsIntelligence />
-            <RegionalSituation />
+            <RegionalSituation regional={dashboardData?.regional} />
           </div>
         </div>
         <footer className="mt-8 flex flex-col gap-3 border-t hairline pt-5 text-[11px] text-graphite/60 font-mono sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:pt-6">
@@ -991,6 +1157,12 @@ function AirSignalDashboard() {
             <span>v0.4.2</span>
             <span>/</span>
             <span>Data: simulated</span>
+            {error && (
+              <>
+                <span>/</span>
+                <span className="text-signal-amber">Backend offline / using simulated data</span>
+              </>
+            )}
             <span>/</span>
             <span className="flex items-center gap-1.5"><span className="inline-block w-1.5 h-1.5 rounded-full bg-signal-green pulse-dot" /> stream healthy</span>
           </div>
